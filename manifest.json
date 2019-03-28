@@ -1,0 +1,26 @@
+{
+  "name": "Poll Mancare",
+  "description": " ",
+  "version": "1.0",
+  "manifest_version": 2,
+  "permissions": ["alarms", "notifications", "webNavigation","tabs", "http://*/*", "https://*/*", "storage" ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_title": "Poll Mancare",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "drink_water16.png",
+  },
+  
+  
+  "content_scripts": [
+   {
+     "matches": ["https://*.facebook.com/*"],
+     "js": ["jquery-3.3.1.min.js","settings.js","mancare.js"]
+   }
+ ]
+}
