@@ -1,14 +1,15 @@
 'use strict';
-
-var food_list_pages = [
-	"https://facebook.com/blabla",
-];
+var settings = settings ||  {
+					food_list_pages :[
+						"https://www.facebook.com/BeerHubBHB/",
+						"https://www.facebook.com/OxfordPub/"
+					]};
 
 var GetFood = () => {
 	
 	//resetam valoarea
 	
-	chrome.storage.sync.set({"food_list":null}, () =>
+	chrome.storage.sync.set({"food_list":null, "start_scavenging_for_food":true}, () =>
 	{
 		var clbk_tabs = (crt_tab) =>
 		{
