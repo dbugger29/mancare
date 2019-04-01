@@ -15,7 +15,8 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 	{
 		if(changes.food_list.length == 5)// lista e gata
 		{
-			formatFoodPool(JSON.changes.food_list);
+			formatFoodPool(changes.food_list);
+			chrome.storage.sync.set({"start_scavenging_for_food":false}, () => {});
 		}
 	}
 	else

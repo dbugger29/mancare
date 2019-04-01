@@ -1,45 +1,125 @@
-settings = settings ||  {
+settings = {
 					food_list_pages :[
 						"https://www.facebook.com/BeerHubBHB/",
 						"https://www.facebook.com/OxfordPub/"
 					]};
 //goto first post and parse it 
-
+const REGEX_CHECK_FOOD = new RegExp("business.{0,20}lunch|meniul?.{1,20}(zilei|business)");
 var addfoodItem = (foodItem, restaurant) =>
 {
 	chrome.storage.sync.get(["food_list"], (result) =>
 	{
+		var json_to_add={};
+		json_to_add[restaurant] = foodItem;
 		if("food_list" in result)
 		{
-			result.food_list = typeof result.food_list == "undefined" ? [{ restaurant: foodItem } ]: result.food_list.push({ restaurant: foodItem } );													
+			result.food_list = typeof result.food_list == "undefined" || result.food_list==null ?
+																									[json_to_add]
+																								: 	result.food_list.push(json_to_add);	
+			console.info("new value:", result.food_list);
+			chrome.storage.sync.set({"food_list":result.food_list}, ()=>{});																							
 		}
-	}
+	});
 }
-
-if( window.location.href in settings.food_list_pages )
+var getFoodDay = () =>
 {
-	chrome.storage.sync.get(["start_scavenging_for_food"], (result) =>
-	{
-		if( result.start_scavenging_for_food == true ) //time to eat :D
-		{
-			var foodTitle = document.querySelectorAll("a[href='"+window.location.href+"']").length >0 ?  document.querySelectorAll("a[href='"+window.location.href+"']")[0].innerText : window.location.href;
-			var documents = document.getElementsByClassName("userContentWrapper");
-			for(var idx=0; idx< documents.length; idx++)
-			{
-				var current_text= documents[idx].innerText;
-				//verificare zi a saptamanii
-				var foodDay = (new Date()).getDay();
-				var sFoodDay = "";
-				switch(foodDay)
+	var foodDay = (new Date()).getDay();
+	var foodDay = "";
+	switch(foodDay)
 				{
 					case 1: sFoodDay = "luni";
 							break;
 					case 2: sFoodDay = "marti";
 							break;
+					case 3: sFoodDay = "miercuri";
+							break;
+					case 4: sFoodDay = "joi";
+							break;
+					case 5: sFoodDay = "vineri";
+							break;	
 				}
-			}
-				
-		}
+	return foodDay;
+}
+var removeCommentArea = (elementClass) =>
+{
+    var elements = document.getElementsByClassName(elementClass);
+	for(var ide =0; ide< elements.length; ide++)
+		elements[ide].parentNode.removeChild(elements[ide]);
+}
+
+var ScrollToBottom = (clbk ) =>
+{
+	window.scroll({
+	  top: 5*window.innerHeight,
+	  left: 0,
+	  behavior: 'smooth'
+	});
+	setTimeout(clbk, 20000); // poate verificat altfel
+}
+
+var checkURLisFood = () =>
+{
+	for( var id = 0; id < settings.food_list_pages.length; id++ )
+	{
+		if(window.location.href== settings.food_list_pages[id] )
+			return true;
 	}
-	
+	return false;
+}
+var startCheck = () => 
+{
+	setTimeout( () =>
+	{
+		if( checkURLisFood()  )
+		{
+			chrome.storage.sync.get(["start_scavenging_for_food"], (result) =>
+			{
+				if( result.start_scavenging_for_food == true ) //time to eat :D
+				{
+					//removeCommentArea("commentable_item");
+					//to do scroll and wait
+					ScrollToBottom( () =>
+					{
+						var foodTitle = document.querySelectorAll("a[href='"+window.location.href+"']").length >0 ?  document.querySelectorAll("a[href='"+window.location.href+"']")[0].innerText : window.location.href;
+						var documents = document.getElementsByClassName("userContentWrapper");
+						var foodItems = "";
+						console.info(documents.length);
+						for(var idx=0; idx< documents.length; idx++)
+						{
+							if( documents[idx].getElementsByClassName("see_more_link_inner").length >0 )
+							{
+								(documents[idx].getElementsByClassName("see_more_link_inner")[0]).click();
+							}
+							var current_text = (documents[idx].getElementsByClassName("userContent")[0]).innerText;
+							var sFoodDay = getFoodDay();
+							current_text = current_text.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
+							
+							if( REGEX_CHECK_FOOD.test( current_text.toLowerCase() ) == true)
+							{
+								//TO DO - check current day
+								
+								if(current_text.indexOf("P.S.") > 0)
+									current_text = current_text.substr(0,current_text.indexOf("P.S.") );
+								console.info(current_text);
+								foodItems = current_text;
+								break;
+							}
+						}
+						if(foodItems.length !=0)
+						{
+							addfoodItem(foodItems, foodTitle);
+						}
+					});			
+				}
+			});
+		}
+	}, 5000);
+}
+
+
+document.onreadystatechange = function () {
+  var state = document.readyState;
+  console.info(state);
+  if( state == 'complete') 
+      startCheck();
 }

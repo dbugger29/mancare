@@ -15,9 +15,9 @@ var GetFood = () => {
 		{
 			console.info("tab created:", crt_tab);
 		}
-		for(var idx=0; idx< food_list_pages.length; idx++)
+		for(var idx=0; idx< settings.food_list_pages.length; idx++)
 		{
-			chrome.tabs.create({"url":food_list_pages[idx]}, (tab) => {});
+			chrome.tabs.create({"url":settings.food_list_pages[idx]}, (tab) => {});
 		}
 	});
 }
