@@ -1,21 +1,29 @@
 settings = {
 					food_list_pages :[
 						"https://www.facebook.com/BeerHubBHB/",
-						"https://www.facebook.com/OxfordPub/"
+						"https://www.facebook.com/OxfordPub/",
+						"https://www.facebook.com/CzechInPalas/",
+						"https://www.facebook.com/LegendIasi/",
+						"https://www.facebook.com/chefgalerie/"
 					]};
 //goto first post and parse it 
-const REGEX_CHECK_FOOD = new RegExp("business.{0,20}lunch|meniul?.{1,20}(zilei|business)");
+const REGEX_CHECK_FOOD = new RegExp("(business.{0,20}lunch)|(meniul?.{1,50}(zilei|business|pranz))");
 var addfoodItem = (foodItem, restaurant) =>
 {
 	chrome.storage.sync.get(["food_list"], (result) =>
 	{
-		var json_to_add={};
-		json_to_add[restaurant] = foodItem;
+		var json_to_add={"restaurant" : restaurant,
+						  "food" : foodItem};
+		//json_to_add[restaurant] = foodItem;
 		if("food_list" in result)
 		{
-			result.food_list = typeof result.food_list == "undefined" || result.food_list==null ?
-																									[json_to_add]
-																								: 	result.food_list.push(json_to_add);	
+			if(	 typeof result.food_list == "undefined" || result.food_list==null )
+					result.food_list = [json_to_add];
+			else
+						result.food_list.push(json_to_add);
+			//result.food_list = typeof result.food_list == "undefined" || result.food_list==null ?
+				//																					[json_to_add]
+				//																				: 	result.food_list.push(json_to_add);	
 			console.info("new value:", result.food_list);
 			chrome.storage.sync.set({"food_list":result.food_list}, ()=>{});																							
 		}
@@ -50,11 +58,22 @@ var removeCommentArea = (elementClass) =>
 var ScrollToBottom = (clbk ) =>
 {
 	window.scroll({
-	  top: 5*window.innerHeight,
+	  top: 10*window.innerHeight,
 	  left: 0,
 	  behavior: 'smooth'
 	});
-	setTimeout(clbk, 20000); // poate verificat altfel
+	 setTimeout(clbk, 20000);	
+	// setTimeout( ()=>
+	// {
+		// window.scroll({
+			  // top: 10*window.innerHeight,
+			  // left: 0,
+			  // behavior: 'smooth'
+		// });
+		
+		// setTimeout(clbk, 20000);	
+		
+	// }, 20000); // poate verificat altfel
 }
 
 var checkURLisFood = () =>

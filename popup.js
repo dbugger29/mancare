@@ -2,7 +2,10 @@
 var settings = settings ||  {
 					food_list_pages :[
 						"https://www.facebook.com/BeerHubBHB/",
-						"https://www.facebook.com/OxfordPub/"
+						"https://www.facebook.com/OxfordPub/",
+						"https://www.facebook.com/CzechInPalas/",
+						"https://www.facebook.com/LegendIasi/",
+						"https://www.facebook.com/chefgalerie/"
 					]};
 
 var GetFood = () => {
@@ -11,14 +14,6 @@ var GetFood = () => {
 	
 	chrome.storage.sync.set({"food_list":null, "start_scavenging_for_food":true}, () =>
 	{
-		var clbk_tabs = (crt_tab) =>
-		{
-			console.info("tab created:", crt_tab);
-		}
-		for(var idx=0; idx< settings.food_list_pages.length; idx++)
-		{
-			chrome.tabs.create({"url":settings.food_list_pages[idx]}, (tab) => {});
-		}
 	});
 }
 
