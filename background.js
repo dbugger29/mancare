@@ -5,6 +5,7 @@ var settings = settings ||  {
 						"https://www.facebook.com/OxfordPub/",
 						"https://www.facebook.com/CzechInPalas/",
 						"https://www.facebook.com/LegendIasi/",
+						"https://www.facebook.com/bistromoo/",
 						"https://www.facebook.com/chefgalerie/"
 					]};
 
@@ -35,7 +36,7 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
 	else
 		if("food_list" in changes && "newValue" in changes.food_list )
 		{
-			if(changes.food_list.newValue.length == 5)// lista e gata
+			if(changes.food_list.newValue!=null && changes.food_list.newValue.length == 5)// lista e gata
 			{
 				//formatFoodPool(changes.food_list);
 				chrome.storage.sync.set({"start_scavenging_for_food":false}, () => {});

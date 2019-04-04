@@ -4,6 +4,7 @@ settings = {
 						"https://www.facebook.com/OxfordPub/",
 						"https://www.facebook.com/CzechInPalas/",
 						"https://www.facebook.com/LegendIasi/",
+						"https://www.facebook.com/bistromoo/",
 						"https://www.facebook.com/chefgalerie/"
 					]};
 //goto first post and parse it 
@@ -85,21 +86,51 @@ var checkURLisFood = () =>
 	}
 	return false;
 }
-var startCheck = () => 
+
+var parseFoodPost = (current_text) =>
 {
-	setTimeout( () =>
+	if(current_text.indexOf("P.S.") > 0)
+		current_text = current_text.substr(0,current_text.indexOf("P.S.") );
+	console.info(current_text);
+	if(current_text.indexOf(":") >0)
 	{
-		if( checkURLisFood()  )
+		current_text =  current_text.substr(current_text.indexOf(":") );
+	}
+	return current_text;
+}
+var startCheck = () => 
+{	
+	if( checkURLisFood()  )
+	{
+		chrome.storage.sync.get(["start_scavenging_for_food"], (result) =>
 		{
-			chrome.storage.sync.get(["start_scavenging_for_food"], (result) =>
+			if( result.start_scavenging_for_food == true ) //time to eat :D
 			{
-				if( result.start_scavenging_for_food == true ) //time to eat :D
+				var foodTitle = document.querySelectorAll("a[href='"+window.location.href+"']").length >0 ?  document.querySelectorAll("a[href='"+window.location.href+"']")[0].innerText : window.location.href;
+				var nr_tries=0;
+				var handler_food = (result) =>
 				{
-					//removeCommentArea("commentable_item");
-					//to do scroll and wait
+					nr_tries++;
+					if(result == null && nr_tries < 5 )
+					{
+						//setTimeout( () =>
+					//	{	
+							checkFood(handler_food);		
+						//}, 5000);
+					}
+					else
+					{
+						
+						if( nr_tries >= 5 )
+							result="could not parse";
+						addfoodItem(result, foodTitle);
+					}
+				}
+				var checkFood = ( clbk ) =>
+				{
 					ScrollToBottom( () =>
 					{
-						var foodTitle = document.querySelectorAll("a[href='"+window.location.href+"']").length >0 ?  document.querySelectorAll("a[href='"+window.location.href+"']")[0].innerText : window.location.href;
+						
 						var documents = document.getElementsByClassName("userContentWrapper");
 						var foodItems = "";
 						console.info(documents.length);
@@ -111,28 +142,33 @@ var startCheck = () =>
 							}
 							var current_text = (documents[idx].getElementsByClassName("userContent")[0]).innerText;
 							var sFoodDay = getFoodDay();
-							current_text = current_text.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-							
+							current_text = current_text.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 							if( REGEX_CHECK_FOOD.test( current_text.toLowerCase() ) == true)
 							{
-								//TO DO - check current day
-								
-								if(current_text.indexOf("P.S.") > 0)
-									current_text = current_text.substr(0,current_text.indexOf("P.S.") );
-								console.info(current_text);
-								foodItems = current_text;
-								break;
+								var postDate = (documents[idx].getElementsByClassName("timestampContent")[0]).innerText;
+								if(	current_text.toLowerCase().indexOf(sFoodDay) >=0 || postDate.indexOf("hrs") >=0)
+								{							
+									//TO DO - check current day
+									
+									foodItems = parseFoodPost(current_text);
+									break;
+								}
 							}
 						}
 						if(foodItems.length !=0)
 						{
-							addfoodItem(foodItems, foodTitle);
+							return clbk(foodItems);
 						}
-					});			
+						else
+							return clbk();
+					});	
 				}
-			});
-		}
-	}, 5000);
+				checkFood(handler_food);
+				
+			}
+		});
+	}
+	
 }
 
 
