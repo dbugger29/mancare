@@ -6,6 +6,7 @@ var settings = settings ||  {
 						"https://www.facebook.com/CzechInPalas/",
 						"https://www.facebook.com/LegendIasi/",
 						"https://www.facebook.com/bistromoo/",
+						"https://www.facebook.com/treazsinu/",
 						"https://www.facebook.com/chefgalerie/"
 					]};
 

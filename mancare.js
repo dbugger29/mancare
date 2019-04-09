@@ -5,6 +5,7 @@ settings = {
 						"https://www.facebook.com/CzechInPalas/",
 						"https://www.facebook.com/LegendIasi/",
 						"https://www.facebook.com/bistromoo/",
+						"https://www.facebook.com/treazsinu/",
 						"https://www.facebook.com/chefgalerie/"
 					]};
 //goto first post and parse it 
@@ -92,6 +93,7 @@ var parseFoodPost = (current_text) =>
 	if(current_text.indexOf("P.S.") > 0)
 		current_text = current_text.substr(0,current_text.indexOf("P.S.") );
 	console.info(current_text);
+	current_text = current_text.replace(/\d\d:\d\d\s?-\s?\d\d:\d\d/g, "");
 	if(current_text.indexOf(":") >0)
 	{
 		current_text =  current_text.substr(current_text.indexOf(":") );
@@ -146,7 +148,14 @@ var startCheck = () =>
 							if( REGEX_CHECK_FOOD.test( current_text.toLowerCase() ) == true)
 							{
 								var postDate = (documents[idx].getElementsByClassName("timestampContent")[0]).innerText;
-								if(	current_text.toLowerCase().indexOf(sFoodDay) >=0 || postDate.indexOf("hrs") >=0)
+								var parsedHour = /((\d+)\s+(hrs?)|(mins?))|(just now)|(a few moments ago)/g.exec(postDate);
+								var postHour = -1;
+								if(parsedHour && parsedHour.length >2)
+									if(parsedHour[2])
+										postHour = parseInt(parsedHour[2]);
+									else 
+										postHour = 0;
+								if(	current_text.toLowerCase().indexOf(sFoodDay) >=0 || (postHour>=0 && postHour<12)  )
 								{							
 									//TO DO - check current day
 									
