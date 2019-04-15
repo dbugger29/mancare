@@ -34,7 +34,7 @@ var addfoodItem = (foodItem, restaurant) =>
 var getFoodDay = () =>
 {
 	var foodDay = (new Date()).getDay();
-	var foodDay = "";
+	var sFoodDay = "";
 	switch(foodDay)
 				{
 					case 1: sFoodDay = "luni";
@@ -48,7 +48,7 @@ var getFoodDay = () =>
 					case 5: sFoodDay = "vineri";
 							break;	
 				}
-	return foodDay;
+	return sFoodDay;
 }
 var removeCommentArea = (elementClass) =>
 {
@@ -64,7 +64,7 @@ var ScrollToBottom = (clbk ) =>
 	  left: 0,
 	  behavior: 'smooth'
 	});
-	 setTimeout(clbk, 20000);	
+	 setTimeout(clbk, 10000);	
 	// setTimeout( ()=>
 	// {
 		// window.scroll({
@@ -100,6 +100,24 @@ var parseFoodPost = (current_text) =>
 	}
 	return current_text;
 }
+function timeAgo(time){
+	var date = new Date((time || "").replace(/-/g,"/").replace(/[TZ]/g," ")),
+		diff = (((new Date()).getTime() - date.getTime()) / 1000),
+		day_diff = Math.floor(diff / 86400);
+
+	if ( isNaN(day_diff) || day_diff < 0 || day_diff >= 31 )
+		return;
+
+	return day_diff == 0 && (
+			diff < 60 && "just now" ||
+			diff < 120 && "1 minute ago" ||
+			diff < 3600 && Math.floor( diff / 60 ) + " minutes ago" ||
+			diff < 7200 && "1 hour ago" ||
+			diff < 86400 && Math.floor( diff / 3600 ) + " hours ago") ||
+		day_diff == 1 && "Yesterday" ||
+		day_diff < 7 && day_diff + " days ago" ||
+		day_diff < 31 && Math.ceil( day_diff / 7 ) + " weeks ago";
+}
 var startCheck = () => 
 {	
 	if( checkURLisFood()  )
@@ -113,7 +131,7 @@ var startCheck = () =>
 				var handler_food = (result) =>
 				{
 					nr_tries++;
-					if(result == null && nr_tries < 5 )
+					if(result == null && nr_tries < 10 )
 					{
 						//setTimeout( () =>
 					//	{	
@@ -123,7 +141,7 @@ var startCheck = () =>
 					else
 					{
 						
-						if( nr_tries >= 5 )
+						if( nr_tries >= 10 )
 							result="could not parse";
 						addfoodItem(result, foodTitle);
 					}
@@ -148,18 +166,23 @@ var startCheck = () =>
 							if( REGEX_CHECK_FOOD.test( current_text.toLowerCase() ) == true)
 							{
 								var postDate = (documents[idx].getElementsByClassName("timestampContent")[0]).innerText;
-								var parsedHour = /((\d+)\s+(hrs?)|(mins?))|(just now)|(a few moments ago)/g.exec(postDate);
+								postDate = postDate.trim();
+								var parsedHour = /^((\d+)\s+(hrs?)|(mins?))|(just now)|(a few moments ago)/g.exec(postDate);
 								var postHour = -1;
 								if(parsedHour && parsedHour.length >2)
 									if(parsedHour[2])
 										postHour = parseInt(parsedHour[2]);
 									else 
 										postHour = 0;
+								var post_time = timeAgo(postDate);
+								console.info(postHour);
+								current_text = current_text.replace(/luni\s?(pana|-)\s?vineri/gi, "");
+								// to do -post must not be older than 5 days
 								if(	current_text.toLowerCase().indexOf(sFoodDay) >=0 || (postHour>=0 && postHour<12)  )
 								{							
 									//TO DO - check current day
-									
 									foodItems = parseFoodPost(current_text);
+									console.info(foodItems);
 									break;
 								}
 							}
