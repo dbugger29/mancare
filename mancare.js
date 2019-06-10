@@ -1,13 +1,10 @@
-settings = {
-					food_list_pages :[
-						"https://www.facebook.com/BeerHubBHB/",
-						"https://www.facebook.com/OxfordPub/",
-						"https://www.facebook.com/CzechInPalas/",
-						"https://www.facebook.com/LegendIasi/",
-						"https://www.facebook.com/bistromoo/",
-						"https://www.facebook.com/treazsinu/",
-						"https://www.facebook.com/chefgalerie/"
-					]};
+settings = {};
+const url = chrome.runtime.getURL('./settings.js');
+
+fetch(url)
+    .then((response) => response.json()) //assuming file contains json
+    .then((json) => settings = json );
+	
 //goto first post and parse it 
 const REGEX_CHECK_FOOD = new RegExp("(business.{0,20}lunch)|(meniul?.{1,50}(zilei|business|pranz))");
 var addfoodItem = (foodItem, restaurant) =>
