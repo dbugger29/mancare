@@ -1,12 +1,17 @@
-settings = {};
-const url = chrome.runtime.getURL('./settings.js');
+var settings = null;
+var page_state = null;
+var url = chrome.runtime.getURL('./settings.json');
 
 fetch(url)
-    .then((response) => response.json()) //assuming file contains json
-    .then((json) => settings = json );
+    .then((response) => response.json() ) //assuming file contains json
+    .then((json) => {
+		settings = json;
+		if( page_state == 'complete' && settings != null ) 
+			startCheck();
+	});
 	
 //goto first post and parse it 
-const REGEX_CHECK_FOOD = new RegExp("(business.{0,20}lunch)|(meniul?.{1,50}(zilei|business|pranz))");
+const REGEX_CHECK_FOOD = new RegExp("(business.{0,20}lunch)|(meniul?.{1,50}(zilei|business|pranz))|business|prânz");
 var addfoodItem = (foodItem, restaurant) =>
 {
 	chrome.storage.sync.get(["food_list"], (result) =>
@@ -128,7 +133,7 @@ var startCheck = () =>
 				var handler_food = (result) =>
 				{
 					nr_tries++;
-					if(result == null && nr_tries < 10 )
+					if(result == null && nr_tries < 5 )
 					{
 						//setTimeout( () =>
 					//	{	
@@ -138,7 +143,7 @@ var startCheck = () =>
 					else
 					{
 						
-						if( nr_tries >= 10 )
+						if( nr_tries >= 5 )
 							result="could not parse";
 						addfoodItem(result, foodTitle);
 					}
@@ -164,7 +169,7 @@ var startCheck = () =>
 							{
 								var postDate = (documents[idx].getElementsByClassName("timestampContent")[0]).innerText;
 								postDate = postDate.trim();
-								var parsedHour = /^((\d+)\s+(hrs?)|(mins?))|(just now)|(a few moments ago)/g.exec(postDate);
+								var parsedHour = /^((\d+)\s+((hrs?)|(minute?)|ora|ore|(mins?)))|(just now)|(a few moments ago)/g.exec(postDate);
 								var postHour = -1;
 								if(parsedHour && parsedHour.length >2)
 									if(parsedHour[2])
@@ -202,8 +207,8 @@ var startCheck = () =>
 
 
 document.onreadystatechange = function () {
-  var state = document.readyState;
-  console.info(state);
-  if( state == 'complete') 
+  page_state = document.readyState;
+  console.info(page_state);
+  if( page_state == 'complete' && settings != null ) 
       startCheck();
 }

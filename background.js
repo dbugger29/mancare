@@ -1,10 +1,12 @@
-'use strict';
-var settings = {};
-const url = chrome.runtime.getURL('./settings.js');
+var settings = null;
+var url = chrome.runtime.getURL('./settings.json');
 
 fetch(url)
-    .then((response) => response.json()) //assuming file contains json
-    .then((json) => settings = json );
+    .then((response) => response.json() ) //assuming file contains json
+    .then((json) => {
+		settings = json;
+		console.info(settings);
+	});
 
 //var idxL = 0;
  chrome.runtime.onInstalled.addListener(function() {
@@ -21,9 +23,14 @@ var clbk_tabs = (crt_tab) =>
 	//idxL++;
 }
 		
-		
-chrome.storage.onChanged.addListener(function(changes, namespace) {
+const delay = ms => new Promise(res => setTimeout(res, ms));
 	
+chrome.storage.onChanged.addListener( async function(changes, namespace) {
+	
+	while( settings == null )
+	{
+		await delay(50);
+	}
 	console.info(changes, namespace);	
 	//{"food_list":null, "start_scavenging_for_food":true}
 	if("food_list" in changes && changes.food_list.newValue== null && "start_scavenging_for_food" in changes && changes.start_scavenging_for_food.newValue == true )
