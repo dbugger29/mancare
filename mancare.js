@@ -11,7 +11,7 @@ fetch(url)
 	});
 	
 //goto first post and parse it 
-const REGEX_CHECK_FOOD = new RegExp("(business.{0,20}lunch)|(meniul?.{1,50}(zilei|business|pranz))|business|prânz");
+const REGEX_CHECK_FOOD = new RegExp("(business.{0,20}lunch)|(meniul?.{1,50}(zilei|business|pranz))|business|prânz|lunch");
 var addfoodItem = (foodItem, restaurant) =>
 {
 	chrome.storage.sync.get(["food_list"], (result) =>
@@ -120,7 +120,53 @@ function timeAgo(time){
 		day_diff < 7 && day_diff + " days ago" ||
 		day_diff < 31 && Math.ceil( day_diff / 7 ) + " weeks ago";
 }
-var startCheck = () => 
+//curl https://api.ocr.space/Parse/Image -H "apikey:helloworld" --data "isOverlayRequired=true&url=http://dl.a9t9.com/blog/ocr-online/screenshot.jpg&language=eng"
+function ParseImageContent(href_img)
+{
+	//to do here
+	//get 'https://api.ocr.space/parse/imageurl?apikey='+ 642fae218f88957+'&url=' + href_img
+	var req_url = 'https://api.ocr.space/parse/image?apikey=642fae218f88957&url=' + encodeURIComponent(href_img);
+	console.info(req_url);
+	fetch(req_url,
+	{
+	method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+    credentials: 'same-origin', // include, *same-origin, omit
+    headers: {
+		'Content-Type':'application/x-www-form-urlencoded',
+		"apikey":settings.api_key,
+		
+		}
+	})
+	//.then( (response) => response.text() )
+	.then((response) =>
+	{
+		response.text().then((text) => 
+					{
+						console.info("uhuuuuu");
+						console.info(text);
+						return text;
+					});
+	})
+	.catch(function(err) {
+		console.info('Fetch Error :-S', err);
+		return null;
+	});
+	/*
+    .then((text) => {
+		 console.info("uhuuuuu");
+		 console.info(text.body);
+		  console.info(text.body.json());
+		 return text.body.json();
+	})
+	.catch(function(err) {
+		console.info('Fetch Error :-S', err);
+		return null;
+	});
+	*/
+}
+var startCheck = async () => 
 {	
 	if( checkURLisFood()  )
 	{
@@ -150,11 +196,11 @@ var startCheck = () =>
 				}
 				var checkFood = ( clbk ) =>
 				{
-					ScrollToBottom( () =>
+					ScrollToBottom( async () =>
 					{
-						
 						var documents = document.getElementsByClassName("userContentWrapper");
 						var foodItems = "";
+						var current_text = "";
 						console.info(documents.length);
 						for(var idx=0; idx< documents.length; idx++)
 						{
@@ -162,8 +208,22 @@ var startCheck = () =>
 							{
 								(documents[idx].getElementsByClassName("see_more_link_inner")[0]).click();
 							}
-							var current_text = (documents[idx].getElementsByClassName("userContent")[0]).innerText;
+							if(settings.parse_image_list.indexOf(window.location.href) >= 0)
+							{
+								var href_img = ((document.getElementsByClassName("userContentWrapper")[1]).getElementsByTagName('img')[1]).getAttribute('src');
+								current_text = await ParseImageContent( href_img );
+								console.info(current_text);
+								if(typeof current_text == "undefined")
+									current_text = (documents[idx].getElementsByClassName("userContent")[0]).innerText;
+								//alert(current_text);
+							}
+							else
+							{	
+								
+								current_text = (documents[idx].getElementsByClassName("userContent")[0]).innerText;
+							}
 							var sFoodDay = getFoodDay();
+							
 							current_text = current_text.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 							if( REGEX_CHECK_FOOD.test( current_text.toLowerCase() ) == true)
 							{

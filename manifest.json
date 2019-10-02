@@ -15,8 +15,7 @@
   "icons": {
     "128": "food.png"
   },
-  
-  
+  "content_security_policy": "script-src 'self' https://api.ocr.space/parse/imageurl/; object-src 'self'",
   "content_scripts": [
    {
      "matches": ["https://*.facebook.com/*"],
