@@ -3,7 +3,7 @@
   "description": " ",
   "version": "1.0",
   "manifest_version": 2,
-  "permissions": ["alarms", "notifications", "webNavigation","tabs", "http://*/*", "https://*/*", "storage" ],
+  "permissions": ["alarms", "notifications", "webNavigation","tabs", "http://*/*", "https://*/*", "https://api.ocr.space/*", "storage" ],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
@@ -15,7 +15,7 @@
   "icons": {
     "128": "food.png"
   },
-  "content_security_policy": "script-src 'self' https://api.ocr.space/parse/imageurl/; object-src 'self'",
+  "content_security_policy": "script-src 'self' https://facebook.com https://api.ocr.space/parse/imageurl/*; object-src 'self'",
   "content_scripts": [
    {
      "matches": ["https://*.facebook.com/*"],

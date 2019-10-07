@@ -1,7 +1,7 @@
 var settings = null;
 var page_state = null;
 var url = chrome.runtime.getURL('./settings.json');
-
+var nr_req_ocr = 0;
 fetch(url)
     .then((response) => response.json() ) //assuming file contains json
     .then((json) => {
@@ -67,17 +67,6 @@ var ScrollToBottom = (clbk ) =>
 	  behavior: 'smooth'
 	});
 	 setTimeout(clbk, 10000);	
-	// setTimeout( ()=>
-	// {
-		// window.scroll({
-			  // top: 10*window.innerHeight,
-			  // left: 0,
-			  // behavior: 'smooth'
-		// });
-		
-		// setTimeout(clbk, 20000);	
-		
-	// }, 20000); // poate verificat altfel
 }
 
 var checkURLisFood = () =>
@@ -121,51 +110,45 @@ function timeAgo(time){
 		day_diff < 31 && Math.ceil( day_diff / 7 ) + " weeks ago";
 }
 //curl https://api.ocr.space/Parse/Image -H "apikey:helloworld" --data "isOverlayRequired=true&url=http://dl.a9t9.com/blog/ocr-online/screenshot.jpg&language=eng"
-function ParseImageContent(href_img)
+async function ParseImageContent(href_img)
 {
-	//to do here
-	//get 'https://api.ocr.space/parse/imageurl?apikey='+ 642fae218f88957+'&url=' + href_img
-	var req_url = 'https://api.ocr.space/parse/image?apikey=642fae218f88957&url=' + encodeURIComponent(href_img);
-	console.info(req_url);
-	fetch(req_url,
-	{
-	method: 'POST', // *GET, POST, PUT, DELETE, etc.
-    mode: 'cors', // no-cors, *cors, same-origin
-    //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-    credentials: 'same-origin', // include, *same-origin, omit
-    headers: {
-		'Content-Type':'application/x-www-form-urlencoded',
-		"apikey":settings.api_key,
-		
-		}
-	})
-	//.then( (response) => response.text() )
-	.then((response) =>
-	{
-		response.text().then((text) => 
+	
+	nr_req_ocr++;
+	if(nr_req_ocr> settings.MAX_REQ_OCR_PAGE) return "limit exceeded";
+	return new Promise(function(resolve, reject) {
+			var http = new XMLHttpRequest();
+			var url = 'https://api.ocr.space/parse/image';
+			//to do here
+			http.open('POST', url, true);
+			//Send the proper header information along with the request
+			http.setRequestHeader('Content-type', 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW');
+			http.setRequestHeader('apikey', '642fae218f88957');
+			var postData = "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"language\"\r\n\r\neng\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"isOverlayRequired\"\r\n\r\nfalse\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"url\"\r\n\r\n"+href_img+"\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"iscreatesearchablepdf\"\r\n\r\nfalse\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"issearchablepdfhidetextlayer\"\r\n\r\nfalse\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--";
+			http.onreadystatechange = function() {
+				if(http.readyState == 4 && http.status == 200) {
+					console.info(http.responseText);
+					try{
+						var j_resp = JSON.parse(http.responseText);
+						if("ParsedResults" in j_resp)
+						{
+							return resolve(j_resp.ParsedResults[0].ParsedText);
+						}
+						else
+							return resolve(http.responseText);
+					}
+					catch(ex) 
 					{
-						console.info("uhuuuuu");
-						console.info(text);
-						return text;
-					});
-	})
-	.catch(function(err) {
-		console.info('Fetch Error :-S', err);
-		return null;
+						return resolve("error parsing response")
+					};
+					return resolve(http.responseText);
+				}
+			}
+			http.send(postData);
 	});
-	/*
-    .then((text) => {
-		 console.info("uhuuuuu");
-		 console.info(text.body);
-		  console.info(text.body.json());
-		 return text.body.json();
-	})
-	.catch(function(err) {
-		console.info('Fetch Error :-S', err);
-		return null;
-	});
-	*/
 }
+
+
+
 var startCheck = async () => 
 {	
 	if( checkURLisFood()  )

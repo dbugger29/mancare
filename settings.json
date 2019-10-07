@@ -10,5 +10,6 @@
 			"https://www.facebook.com/chouseloungecafemilano/"	
 		],
 		"api_key": "642fae218f88957",
-		"BEFORE_TIME_REZERVATION" : 10000
+		"BEFORE_TIME_REZERVATION" : 10000,
+		"MAX_REQ_OCR_PAGE" :5
 }
